@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FactLayer — Decentralized Fact-Checking</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.0/dist/ethers.umd.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d0d1a;
+      color: #e0e0f0;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    header h1 {
+      font-size: 2.4rem;
+      background: linear-gradient(90deg, #7b5ea7, #4fc3f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.4rem;
+    }
+
+    header p {
+      color: #888;
+      font-size: 0.95rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #1a1a2e;
+      border: 1px solid #7b5ea7;
+      color: #b39ddb;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 20px;
+      margin-top: 0.5rem;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #13132b;
+      border: 1px solid #2a2a4a;
+      border-radius: 12px;
+      padding: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      color: #b39ddb;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.85rem;
+      color: #888;
+      margin-bottom: 0.4rem;
+      margin-top: 1rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      background: #0d0d1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #e0e0f0;
+      padding: 0.7rem 1rem;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #7b5ea7;
+    }
+
+    textarea { resize: vertical; min-height: 80px; }
+
+    .btn {
+      display: inline-block;
+      margin-top: 1.2rem;
+      padding: 0.75rem 1.8rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #7b5ea7, #4fc3f7);
+      color: #fff;
+      width: 100%;
+    }
+
+    .btn-secondary {
+      background: #1e1e3a;
+      color: #b39ddb;
+      border: 1px solid #2a2a4a;
+    }
+
+    .wallet-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .wallet-address {
+      font-size: 0.85rem;
+      color: #4fc3f7;
+      background: #0d0d1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 0.5rem 1rem;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Verdict display */
+    .verdict-box {
+      display: none;
+      margin-top: 1.5rem;
+      border-radius: 10px;
+      padding: 1.2rem 1.5rem;
+      border: 1px solid;
+    }
+
+    .verdict-box.true  { background: #0a2a0a; border-color: #2e7d32; }
+    .verdict-box.false { background: #2a0a0a; border-color: #b71c1c; }
+    .verdict-box.unverifiable { background: #1a1a0a; border-color: #f57f17; }
+    .verdict-box.pending { background: #0a0a2a; border-color: #1565c0; }
+
+    .verdict-icon { font-size: 2rem; }
+    .verdict-label {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0.3rem 0;
+    }
+    .verdict-box.true  .verdict-label { color: #66bb6a; }
+    .verdict-box.false .verdict-label { color: #ef5350; }
+    .verdict-box.unverifiable .verdict-label { color: #ffa726; }
+    .verdict-box.pending .verdict-label { color: #42a5f5; }
+
+    .verdict-detail { font-size: 0.85rem; color: #888; }
+
+    /* Claims history */
+    .claim-item {
+      background: #0d0d1a;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .claim-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+
+    .claim-id { font-size: 0.8rem; color: #555; }
+
+    .verdict-chip {
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+
+    .chip-true  { background: #1b5e20; color: #a5d6a7; }
+    .chip-false { background: #b71c1c; color: #ffcdd2; }
+    .chip-unverifiable { background: #e65100; color: #ffe0b2; }
+    .chip-pending { background: #0d47a1; color: #bbdefb; }
+
+    .claim-text { font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .claim-source { font-size: 0.75rem; color: #555; word-break: break-all; }
+
+    /* Status */
+    .status-msg {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #888;
+      min-height: 1.2rem;
+      text-align: center;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #444;
+      border-top-color: #7b5ea7;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .contract-config {
+      font-size: 0.8rem;
+      color: #555;
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .contract-config a { color: #7b5ea7; text-decoration: none; }
+
+    /* Network warning */
+    .warning {
+      background: #1a0f00;
+      border: 1px solid #f57f17;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      font-size: 0.85rem;
+      color: #ffa726;
+      margin-bottom: 1rem;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚖️ FactLayer</h1>
+  <p>Decentralized Fact-Checking powered by AI Consensus</p>
+  <span class="badge">GenLayer Testnet Bradbury · Hackathon 2026</span>
+</header>
+
+<div class="container">
+
+  <!-- Network Warning -->
+  <div class="warning" id="networkWarning">
+    ⚠️ Wrong network detected. Please switch to <strong>GenLayer Testnet Bradbury</strong> in your wallet.
+  </div>
+
+  <!-- Wallet -->
+  <div class="card">
+    <h2>🔗 Wallet</h2>
+    <div class="wallet-bar">
+      <div class="wallet-address" id="walletAddress">Not connected</div>
+      <button class="btn btn-secondary" id="connectBtn" onclick="connectWallet()">Connect</button>
+    </div>
+  </div>
+
+  <!-- Submit Claim -->
+  <div class="card">
+    <h2>📝 Submit a Claim</h2>
+
+    <label>Claim to verify</label>
+    <textarea id="claimInput" placeholder="e.g. Bitcoin was created in 2009"></textarea>
+
+    <label>Source URL</label>
+    <input type="url" id="sourceInput" placeholder="https://en.wikipedia.org/wiki/Bitcoin" />
+
+    <button class="btn btn-primary" id="submitBtn" onclick="submitAndVerify()" disabled>
+      Submit &amp; Verify
+    </button>
+
+    <div class="status-msg" id="statusMsg"></div>
+
+    <!-- Verdict Result -->
+    <div class="verdict-box" id="verdictBox">
+      <div class="verdict-icon" id="verdictIcon"></div>
+      <div class="verdict-label" id="verdictLabel"></div>
+      <div class="verdict-detail" id="verdictDetail"></div>
+    </div>
+  </div>
+
+  <!-- Claims History -->
+  <div class="card">
+    <h2>📋 Recent Claims</h2>
+    <button class="btn btn-secondary" onclick="loadClaims()" style="margin-bottom:1rem">Refresh</button>
+    <div id="claimsList">
+      <p style="color:#555; font-size:0.9rem">Connect wallet to see claims.</p>
+    </div>
+  </div>
+
+</div>
+
+<div class="contract-config">
+  Contract: <span id="contractAddrDisplay">not deployed yet</span> ·
+  <a href="https://github.com/efidal/genlayer-intelligent-contracts" target="_blank">GitHub</a>
+</div>
+
+<script>
+  // ─── CONFIG ──────────────────────────────────────────────────────────────────
+  // TODO: Update after deploy on March 20
+  const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+  const GENLAYER_CHAIN = {
+    chainId: "0x" + (17180).toString(16), // GenLayer Testnet Bradbury chain ID
+    chainName: "GenLayer Testnet Bradbury",
+    nativeCurrency: { name: "GEN", symbol: "GEN", decimals: 18 },
+    rpcUrls: ["https://studio.genlayer.com/api"],
+    blockExplorerUrls: []
+  };
+
+  const ABI = [
+    "function submit_and_verify(string claim, string source_url) returns (string)",
+    "function submit_claim(string claim, string source_url) returns (uint256)",
+    "function verify_claim(uint256 claim_id) returns (string)",
+    "function get_claim(uint256 claim_id) view returns (tuple(uint256 id, string claim, string source, string verdict, string confidence, string submitter, bool verified))",
+    "function get_total_claims() view returns (uint256)",
+    "function get_verdict(uint256 claim_id) view returns (string)"
+  ];
+
+  // ─── STATE ────────────────────────────────────────────────────────────────────
+  let provider, signer, contract;
+
+  // ─── WALLET ───────────────────────────────────────────────────────────────────
+  async function connectWallet() {
+    if (!window.ethereum) {
+      alert("No wallet detected. Please install Rabby or MetaMask.");
+      return;
+    }
+    try {
+      await window.ethereum.request({ method: "eth_requestAccounts" });
+      provider = new ethers.BrowserProvider(window.ethereum);
+      signer = await provider.getSigner();
+      const address = await signer.getAddress();
+
+      document.getElementById("walletAddress").textContent = address;
+      document.getElementById("connectBtn").textContent = "Connected";
+      document.getElementById("connectBtn").disabled = true;
+      document.getElementById("submitBtn").disabled = false;
+
+      contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+      document.getElementById("contractAddrDisplay").textContent =
+        CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000"
+          ? "not deployed yet"
+          : CONTRACT_ADDRESS.slice(0, 6) + "..." + CONTRACT_ADDRESS.slice(-4);
+
+      await checkNetwork();
+      await loadClaims();
+
+      window.ethereum.on("accountsChanged", () => location.reload());
+      window.ethereum.on("chainChanged", () => location.reload());
+    } catch (err) {
+      console.error(err);
+      setStatus("Connection failed: " + err.message);
+    }
+  }
+
+  async function checkNetwork() {
+    const network = await provider.getNetwork();
+    const isCorrect = Number(network.chainId) === 17180;
+    document.getElementById("networkWarning").style.display = isCorrect ? "none" : "block";
+  }
+
+  // ─── SUBMIT & VERIFY ─────────────────────────────────────────────────────────
+  async function submitAndVerify() {
+    const claim = document.getElementById("claimInput").value.trim();
+    const source = document.getElementById("sourceInput").value.trim();
+
+    if (!claim || claim.length < 10) {
+      setStatus("⚠️ Claim must be at least 10 characters.");
+      return;
+    }
+    if (!source.startsWith("http")) {
+      setStatus("⚠️ Please enter a valid URL starting with http.");
+      return;
+    }
+
+    if (CONTRACT_ADDRESS === "0x0000000000000000000000000000000000000000") {
+      setStatus("⚠️ Contract not deployed yet. Come back after March 20!");
+      return;
+    }
+
+    setStatus('<span class="spinner"></span> Submitting to GenLayer... (this may take 30-60s)');
+    document.getElementById("submitBtn").disabled = true;
+    hideVerdict();
+
+    try {
+      const tx = await contract.submit_and_verify(claim, source);
+      setStatus('<span class="spinner"></span> Waiting for AI consensus...');
+      const receipt = await tx.wait();
+      setStatus("✅ Transaction confirmed!");
+
+      // Try to read back the latest verdict
+      await loadClaims();
+      const total = await contract.get_total_claims();
+      if (total > 0n) {
+        const latest = await contract.get_claim(total - 1n);
+        showVerdict(latest.verdict, latest.confidence, latest.claim);
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus("❌ Error: " + (err.reason || err.message));
+    } finally {
+      document.getElementById("submitBtn").disabled = false;
+    }
+  }
+
+  // ─── LOAD CLAIMS ─────────────────────────────────────────────────────────────
+  async function loadClaims() {
+    if (!contract) return;
+    const list = document.getElementById("claimsList");
+
+    try {
+      const total = Number(await contract.get_total_claims());
+      if (total === 0) {
+        list.innerHTML = '<p style="color:#555; font-size:0.9rem">No claims submitted yet. Be the first!</p>';
+        return;
+      }
+
+      const start = Math.max(0, total - 5); // show last 5
+      let html = "";
+      for (let i = total - 1; i >= start; i--) {
+        const c = await contract.get_claim(BigInt(i));
+        const verdict = c.verified ? c.verdict : "PENDING";
+        html += `
+          <div class="claim-item">
+            <div class="claim-header">
+              <span class="claim-id">Claim #${i}</span>
+              <span class="verdict-chip chip-${verdict.toLowerCase()}">${verdict}</span>
+            </div>
+            <div class="claim-text">${escHtml(c.claim)}</div>
+            <div class="claim-source">${escHtml(c.source)}</div>
+          </div>`;
+      }
+      list.innerHTML = html;
+    } catch (err) {
+      list.innerHTML = '<p style="color:#555">Could not load claims.</p>';
+    }
+  }
+
+  // ─── HELPERS ─────────────────────────────────────────────────────────────────
+  function showVerdict(verdict, confidence, claim) {
+    const box = document.getElementById("verdictBox");
+    const icons = { TRUE: "✅", FALSE: "❌", UNVERIFIABLE: "❓", PENDING: "⏳" };
+    const v = verdict || "PENDING";
+
+    box.className = "verdict-box " + v.toLowerCase();
+    document.getElementById("verdictIcon").textContent = icons[v] || "❓";
+    document.getElementById("verdictLabel").textContent = v;
+    document.getElementById("verdictDetail").textContent =
+      confidence ? `Confidence: ${confidence}` : "";
+    box.style.display = "block";
+  }
+
+  function hideVerdict() {
+    document.getElementById("verdictBox").style.display = "none";
+  }
+
+  function setStatus(msg) {
+    document.getElementById("statusMsg").innerHTML = msg;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+</script>
+</body>
+</html>
