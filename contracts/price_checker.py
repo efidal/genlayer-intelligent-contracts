@@ -1,6 +1,6 @@
 # price_checker.py
 # GenLayer Intelligent Contract – Live Price Validator via Web + LLM
-# Testnet: Bradbury | Author: efidal (github.com/efidal)
+# Testnet: Bradbury
 #
 # Fetches live asset prices from public sources and uses LLM consensus
 # to validate and normalize the data — no centralized oracle needed.

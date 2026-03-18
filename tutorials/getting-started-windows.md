@@ -1,7 +1,7 @@
 # Getting Started with GenLayer on Windows
 ### Deploy your first Intelligent Contract in under 30 minutes
 
-> Written by [@efidal](https://github.com/efidal) | Tested on Windows 11 | Testnet: Bradbury (March 2026)
+> Tested on Windows 11 | Testnet: Bradbury (March 2026)
 
 ---
 
@@ -162,7 +162,7 @@ Multiple validator nodes run the same LLM query independently and reach consensu
 
 ## Resources
 
-- [GenLayer Portal](https://portal.genlayer.foundation/?ref=6TWD49RC)
+- [GenLayer Portal](https://portal.genlayer.foundation/)
 - [GenLayer Studio](https://studio.genlayer.com/)
 - [Official Docs](https://docs.genlayer.com/)
 - [Validator Guide](https://docs.genlayer.com/validators/setup-guide)

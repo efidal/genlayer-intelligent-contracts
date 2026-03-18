@@ -1,6 +1,6 @@
 # llm_query.py
 # GenLayer Intelligent Contract – Live Web Query via LLM
-# Testnet: Bradbury | Author: efidal (github.com/efidal)
+# Testnet: Bradbury
 #
 # This contract queries a live URL and uses LLM consensus
 # to extract and validate information from unstructured web content.

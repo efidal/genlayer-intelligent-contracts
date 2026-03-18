@@ -1,6 +1,6 @@
 # ai_vote.py
 # GenLayer Intelligent Contract – AI-Powered Voting System
-# Testnet: Bradbury | Author: efidal (github.com/efidal)
+# Testnet: Bradbury
 #
 # A voting contract where the final result is validated by LLM consensus.
 # The AI checks if votes are legitimate and resolves disputes automatically.

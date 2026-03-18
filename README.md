@@ -76,7 +76,4 @@ Full step-by-step guide for Windows users:
 
 ## Author
 
-Built by [@efidal](https://github.com/efidal) as part of the GenLayer Testnet Bradbury exploration.
-
-*If this helped you, consider using my referral link to join the ecosystem:*
-https://portal.genlayer.foundation/?ref=6TWD49RC
+Built as part of the GenLayer Testnet Bradbury exploration.

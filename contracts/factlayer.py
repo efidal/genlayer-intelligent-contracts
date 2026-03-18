@@ -1,6 +1,6 @@
 # factlayer.py
 # GenLayer Intelligent Contract — Decentralized Fact-Checking Protocol
-# Hackathon: Testnet Bradbury | Author: efidal (github.com/efidal)
+# Hackathon: Testnet Bradbury
 #
 # Anyone can submit a claim + source URL.
 # Multiple AI validators independently verify the claim using live web data.

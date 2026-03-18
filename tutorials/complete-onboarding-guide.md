@@ -1,7 +1,7 @@
 # GenLayer Complete Onboarding Guide — Do It Right the First Time
 ### Avoid the common pitfalls and earn maximum points from day one
 
-> Written by [@efidal](https://github.com/efidal) | March 2026 | Based on real onboarding experience
+> March 2026 | Based on real onboarding experience
 
 ---
 
@@ -210,4 +210,4 @@ Tx Hash:     [Your deployment transaction hash]
 
 ---
 
-*Written by [@efidal](https://github.com/efidal) based on hands-on experience onboarding to GenLayer Testnet Bradbury in March 2026.*
+*Based on hands-on experience onboarding to GenLayer Testnet Bradbury in March 2026.*

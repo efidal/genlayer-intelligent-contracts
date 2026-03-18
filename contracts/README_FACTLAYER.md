@@ -67,4 +67,3 @@ FactLayer would be impossible on Ethereum, Solana, or any other chain.
 ## Deployed On
 
 - Network: GenLayer Testnet Bradbury
-- Author: [@efidal](https://github.com/efidal)
