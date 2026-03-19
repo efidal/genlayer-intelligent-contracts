@@ -33,7 +33,8 @@ User submits:  "Bitcoin was created in 2009"  +  https://wikipedia.org/wiki/Bitc
 | `verify_claim(claim_id)` | Run AI consensus verification |
 | `submit_and_verify(claim, url)` | One-step: submit + verify |
 | `challenge_verdict(claim_id, new_url)` | Challenge with new evidence |
-| `get_claim(claim_id)` | Get full details of a claim |
+| `get_claim(claim_id)` | Get full details of a claim (incl. reason) |
+| `get_all_claims()` | Get all submitted claims as a list |
 | `get_verdict(claim_id)` | Get just the verdict |
 
 ## Example Usage
@@ -63,6 +64,17 @@ GenLayer's Intelligent Contracts can:
 - **Reach consensus** — multiple validators agree on subjective outcomes
 
 FactLayer would be impossible on Ethereum, Solana, or any other chain.
+
+## On-Chain State
+
+Each claim stores:
+- `claim` — the statement submitted
+- `source` — the URL used for verification
+- `verdict` — `TRUE` / `FALSE` / `UNVERIFIABLE` / `PENDING`
+- `confidence` — `HIGH` / `MEDIUM` / `LOW`
+- `reason` — one-sentence explanation from the LLM
+- `submitter` — wallet address of the submitter
+- `verified` — boolean
 
 ## Deployed On
 

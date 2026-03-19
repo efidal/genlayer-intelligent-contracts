@@ -198,6 +198,7 @@
     .chip-pending { background: #0d47a1; color: #bbdefb; }
 
     .claim-text { font-size: 0.9rem; margin-bottom: 0.3rem; }
+    .claim-reason { font-size: 0.8rem; color: #7b5ea7; font-style: italic; margin-bottom: 0.3rem; }
     .claim-source { font-size: 0.75rem; color: #555; word-break: break-all; }
 
     /* Status */
@@ -325,7 +326,8 @@
     "function submit_and_verify(string claim, string source_url) returns (string)",
     "function submit_claim(string claim, string source_url) returns (uint256)",
     "function verify_claim(uint256 claim_id) returns (string)",
-    "function get_claim(uint256 claim_id) view returns (tuple(uint256 id, string claim, string source, string verdict, string confidence, string submitter, bool verified))",
+    "function get_claim(uint256 claim_id) view returns (tuple(uint256 id, string claim, string source, string verdict, string confidence, string submitter, bool verified, string reason))",
+    "function get_all_claims() view returns (tuple(uint256 id, string claim, string source, string verdict, string confidence, string reason, bool verified)[])",
     "function get_total_claims() view returns (uint256)",
     "function get_verdict(uint256 claim_id) view returns (string)"
   ];
@@ -407,7 +409,7 @@
       const total = await contract.get_total_claims();
       if (total > 0n) {
         const latest = await contract.get_claim(total - 1n);
-        showVerdict(latest.verdict, latest.confidence, latest.claim);
+        showVerdict(latest.verdict, latest.confidence, latest.reason);
       }
     } catch (err) {
       console.error(err);
@@ -423,24 +425,28 @@
     const list = document.getElementById("claimsList");
 
     try {
-      const total = Number(await contract.get_total_claims());
-      if (total === 0) {
+      const all = await contract.get_all_claims();
+      if (all.length === 0) {
         list.innerHTML = '<p style="color:#555; font-size:0.9rem">No claims submitted yet. Be the first!</p>';
         return;
       }
 
-      const start = Math.max(0, total - 5); // show last 5
+      // Show last 5, newest first
+      const recent = [...all].reverse().slice(0, 5);
       let html = "";
-      for (let i = total - 1; i >= start; i--) {
-        const c = await contract.get_claim(BigInt(i));
+      for (const c of recent) {
         const verdict = c.verified ? c.verdict : "PENDING";
+        const reasonHtml = c.reason
+          ? `<div class="claim-reason">"${escHtml(c.reason)}"</div>`
+          : "";
         html += `
           <div class="claim-item">
             <div class="claim-header">
-              <span class="claim-id">Claim #${i}</span>
+              <span class="claim-id">Claim #${Number(c.id)}</span>
               <span class="verdict-chip chip-${verdict.toLowerCase()}">${verdict}</span>
             </div>
             <div class="claim-text">${escHtml(c.claim)}</div>
+            ${reasonHtml}
             <div class="claim-source">${escHtml(c.source)}</div>
           </div>`;
       }
@@ -451,7 +457,7 @@
   }
 
   // ─── HELPERS ─────────────────────────────────────────────────────────────────
-  function showVerdict(verdict, confidence, claim) {
+  function showVerdict(verdict, confidence, reason) {
     const box = document.getElementById("verdictBox");
     const icons = { TRUE: "✅", FALSE: "❌", UNVERIFIABLE: "❓", PENDING: "⏳" };
     const v = verdict || "PENDING";
@@ -459,8 +465,11 @@
     box.className = "verdict-box " + v.toLowerCase();
     document.getElementById("verdictIcon").textContent = icons[v] || "❓";
     document.getElementById("verdictLabel").textContent = v;
-    document.getElementById("verdictDetail").textContent =
-      confidence ? `Confidence: ${confidence}` : "";
+    const detail = [
+      confidence ? `Confidence: ${confidence}` : "",
+      reason ? `"${reason}"` : ""
+    ].filter(Boolean).join(" · ");
+    document.getElementById("verdictDetail").textContent = detail;
     box.style.display = "block";
   }
 

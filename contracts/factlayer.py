@@ -34,6 +34,8 @@ class FactLayer(gl.Contract):
     confidence: TreeMap[u256, str]      # claim_id → confidence level
     submitters: TreeMap[u256, str]      # claim_id → submitter address
     verified: TreeMap[u256, bool]       # claim_id → has been verified
+    reasons: TreeMap[u256, str]         # claim_id → LLM reasoning
+    original_sources: TreeMap[u256, str]  # claim_id → original source (preserved on challenge)
 
     def __init__(self) -> None:
         self.owner = gl.message.sender_address
@@ -52,12 +54,30 @@ class FactLayer(gl.Contract):
             "confidence": self.confidence[claim_id] if claim_id in self.confidence else "",
             "submitter": self.submitters[claim_id] if claim_id in self.submitters else "",
             "verified": self.verified[claim_id] if claim_id in self.verified else False,
+            "reason": self.reasons[claim_id] if claim_id in self.reasons else "",
         }
 
     @gl.public.view
     def get_total_claims(self) -> u256:
         """Returns total number of claims submitted."""
         return self.claim_count
+
+    @gl.public.view
+    def get_all_claims(self) -> list:
+        """Returns all submitted claims with their current status."""
+        result = []
+        for i in range(int(self.claim_count)):
+            cid = u256(i)
+            result.append({
+                "id": i,
+                "claim": self.claims[cid] if cid in self.claims else "",
+                "source": self.sources[cid] if cid in self.sources else "",
+                "verdict": self.verdicts[cid] if cid in self.verdicts else "PENDING",
+                "confidence": self.confidence[cid] if cid in self.confidence else "",
+                "reason": self.reasons[cid] if cid in self.reasons else "",
+                "verified": self.verified[cid] if cid in self.verified else False,
+            })
+        return result
 
     @gl.public.view
     def get_verdict(self, claim_id: u256) -> str:
@@ -167,9 +187,16 @@ Rules:
         else:
             confidence_level = "LOW"
 
+        reason = ""
+        for line in result.splitlines():
+            if line.upper().startswith("REASON:"):
+                reason = line[7:].strip()
+                break
+
         # Store the verified result
         self.verdicts[claim_id] = verdict
         self.confidence[claim_id] = confidence_level
+        self.reasons[claim_id] = reason
         self.verified[claim_id] = True
 
         return f"{verdict} (Confidence: {confidence_level})"
@@ -207,7 +234,12 @@ Rules:
         assert self.verified[claim_id], "Claim has not been verified yet"
 
         claim = self.claims[claim_id]
-        original_source = self.sources[claim_id]
+        # Use preserved original source (not overwritten by previous challenges)
+        original_source = (
+            self.original_sources[claim_id]
+            if claim_id in self.original_sources
+            else self.sources[claim_id]
+        )
         old_verdict = self.verdicts[claim_id]
 
         # Fetch both sources
@@ -262,9 +294,19 @@ CHANGED: [YES or NO - did the new evidence change the verdict?]
         elif "CONFIDENCE: MEDIUM" in result_upper:
             confidence_level = "MEDIUM"
 
+        reason = ""
+        for line in result.splitlines():
+            if line.upper().startswith("REASON:"):
+                reason = line[7:].strip()
+                break
+
+        # Preserve original source on first challenge
+        if claim_id not in self.original_sources:
+            self.original_sources[claim_id] = self.sources[claim_id]
+        self.sources[claim_id] = new_source_url  # track latest challenge source
         self.verdicts[claim_id] = new_verdict
         self.confidence[claim_id] = confidence_level
-        self.sources[claim_id] = new_source_url  # update to latest source
+        self.reasons[claim_id] = reason
 
         changed = "CHANGED" if new_verdict != old_verdict else "UNCHANGED"
         return f"Claim #{int(claim_id)}: {old_verdict} → {new_verdict} ({changed}, Confidence: {confidence_level})"

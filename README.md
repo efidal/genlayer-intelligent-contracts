@@ -6,6 +6,20 @@ A collection of Intelligent Contracts built on [GenLayer](https://www.genlayer.c
 
 ---
 
+## Hackathon Project: FactLayer
+
+> **Testnet Bradbury Hackathon — March 20 – April 3, 2026**
+
+**FactLayer** is a decentralized fact-checking protocol built on GenLayer. Anyone submits a claim + source URL. Multiple AI validators independently fetch the URL, analyze the content, and vote. LLM consensus produces a tamper-proof verdict stored on-chain: ✅ TRUE / ❌ FALSE / ❓ UNVERIFIABLE.
+
+- Contract: [`contracts/factlayer.py`](contracts/factlayer.py)
+- Frontend: [`frontend/index.html`](frontend/index.html)
+- Full docs: [`contracts/README_FACTLAYER.md`](contracts/README_FACTLAYER.md)
+
+This would be impossible on Ethereum or Solana — GenLayer is the only chain that can fetch live web content and run LLM inference as part of consensus.
+
+---
+
 ## What is GenLayer?
 
 GenLayer is a blockchain where smart contracts can:
@@ -21,6 +35,7 @@ Traditional smart contracts are deterministic. GenLayer's **Intelligent Contract
 
 | Contract | Description | Status |
 |---|---|---|
+| [`factlayer.py`](contracts/factlayer.py) | Decentralized fact-checking via web fetch + LLM consensus | Hackathon 🏆 |
 | [`llm_query.py`](contracts/llm_query.py) | Queries a live URL and extracts information via LLM | Deployed ✅ |
 | [`ai_vote.py`](contracts/ai_vote.py) | Multi-option AI voting system with LLM-based result validation | Deployed ✅ |
 | [`price_checker.py`](contracts/price_checker.py) | Fetches and validates live asset prices via web + AI consensus | Deployed ✅ |
@@ -76,4 +91,5 @@ Full step-by-step guide for Windows users:
 
 ## Author
 
-Built as part of the GenLayer Testnet Bradbury exploration.
+Built by [@efidal](https://github.com/efidal) as part of the GenLayer Testnet Bradbury Hackathon 2026.
+Twitter: [@MehdiFidal](https://x.com/MehdiFidal)
